@@ -1,0 +1,22 @@
+{
+  "name": "chain-ops-mgo",
+  "version": "1.0.0",
+  "description": "Multi-chain Gas Optimizer — Compare real-time gas prices across 9 EVM chains via x402 pay-per-call on Base",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node src/index.js"
+  },
+  "keywords": ["gas", "evm", "x402", "defi", "blockchain", "multichain", "base", "ethereum", "arbitrum", "optimism", "gas-optimizer", "chain-ops"],
+  "author": "leegun <dlrjsdl200@naver.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dlrjsdl200-byte/chain-ops-mgo"
+  },
+  "homepage": "https://mgo.chain-ops.xyz",
+  "bugs": {
+    "url": "https://github.com/dlrjsdl200-byte/chain-ops-mgo/issues"
+  }
+}
