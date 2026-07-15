@@ -1,10 +1,12 @@
 # chain-ops-mgo
 
-> Multi-chain Gas Optimizer — Compare real-time gas prices across 9 EVM chains. Pay-per-call via [x402](https://x402.org) on Base. No API key needed.
+> Multi-chain Gas Optimizer — Compare real-time gas prices across 9 EVM chains and get the cheapest-chain recommendation. Pay-per-call via [x402](https://x402.org) on Base. No API key, no signup.
+
+**When to use:** call it before any EVM transaction (bridge, deploy, swap) to route to the lowest-fee chain — e.g. *"Use Base — saves 99.8% vs Ethereum"*. Built for AI agents: one USDC microtransaction per call, ERC-8004 identity handled automatically.
 
 [![npm version](https://img.shields.io/npm/v/chain-ops-mgo.svg)](https://www.npmjs.com/package/chain-ops-mgo)
 [![Powered by @chain-ops/agent-sdk](https://img.shields.io/badge/powered%20by-%40chain--ops%2Fagent--sdk-8b5cf6)](https://www.npmjs.com/package/@chain-ops/agent-sdk)
-[![ClawHub](https://img.shields.io/badge/ClawHub-chain--ops--mgo-red)](https://clawhub.ai/dlrjsdl200-byte/chain-ops-mgo)
+[![ClawHub](https://img.shields.io/badge/ClawHub-chain--ops--mgo-red)](https://clawhub.ai/dlrjsdl200-byte/skills/chain-ops-mgo)
 
 ## Install
 
@@ -100,7 +102,7 @@ Uses [x402 protocol](https://x402.org) on Base (`eip155:8453`) with USDC. No API
 - API: https://api.mgo.chain-ops.xyz
 - Dashboard: https://mgo.chain-ops.xyz
 - SDK: [`@chain-ops/agent-sdk`](https://www.npmjs.com/package/@chain-ops/agent-sdk) — the underlying x402 + ERC-8004 client
-- ClawHub: https://clawhub.ai/dlrjsdl200-byte/chain-ops-mgo
+- ClawHub: https://clawhub.ai/dlrjsdl200-byte/skills/chain-ops-mgo
 - Homepage: https://chain-ops.xyz
 
 ## License
