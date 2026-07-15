@@ -1,7 +1,8 @@
 {
   "name": "chain-ops-mgo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Multi-chain Gas Optimizer — Compare real-time gas prices across 9 EVM chains via x402 pay-per-call on Base. Powered by @chain-ops/agent-sdk.",
+  "mcpName": "io.github.dlrjsdl200-byte/mgo-mcp-server",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "type": "commonjs",
