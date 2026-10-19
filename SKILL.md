@@ -29,8 +29,12 @@ const { getCheapestChain, getGasDemo } = require('chain-ops-mgo');
 // Free — no payment needed
 const best = await getCheapestChain();
 console.log(`Use ${best.chain} — saves ${best.savingsPercent} vs ${best.savingsVs}`);
-// "Use Base — saves 99.8% vs Ethereum"
+// "Use Optimism — saves 97.4% vs Ethereum"
 ```
+
+## MCP
+
+`npx -y chain-ops-mgo` runs a stdio MCP server with the same tools (set `MGO_PRIVATE_KEY` to let it pay). Remote alternative: `https://api.mgo.chain-ops.xyz/mcp`.
 
 ## API Endpoints
 
@@ -39,6 +43,7 @@ Base URL: `https://api.mgo.chain-ops.xyz`
 | Endpoint | Price | Chains |
 |----------|-------|--------|
 | GET /gas/demo | Free | 4 |
+| GET /prices | Free | — |
 | GET /gas/basic | $0.001 USDC | 4 |
 | GET /gas/premium | $0.002 USDC | 9 |
 
@@ -51,4 +56,4 @@ No API key, no subscription.
 
 - Dashboard: https://mgo.chain-ops.xyz
 - API docs: https://api.mgo.chain-ops.xyz/llms.txt
-- ClawHub: https://clawhub.ai/dlrjsdl200-byte/chain-ops-mgo
+- Source: https://github.com/dlrjsdl200-byte/chain-ops-mgo

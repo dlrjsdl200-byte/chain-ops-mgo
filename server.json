@@ -1,0 +1,27 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.dlrjsdl200-byte/mgo-mcp-server",
+  "title": "MGO — Multi-chain Gas Optimizer",
+  "description": "Cheapest EVM chain across up to 9 networks with savings %. Free demo tools; paid tools via x402 on Base.",
+  "repository": {
+    "url": "https://github.com/dlrjsdl200-byte/chain-ops-mgo",
+    "source": "github"
+  },
+  "version": "1.2.0",
+  "websiteUrl": "https://mgo.chain-ops.xyz",
+  "remotes": [
+    { "type": "streamable-http", "url": "https://api.mgo.chain-ops.xyz/mcp" }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "chain-ops-mgo",
+      "version": "1.2.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        { "name": "MGO_PRIVATE_KEY", "description": "Optional. EVM private key (0x...) holding USDC on Base; enables auto-pay for the paid tools.", "isRequired": false, "isSecret": true },
+        { "name": "MGO_MAX_PRICE", "description": "Optional. Hard cap per call in micro-USDC (default 10000 = $0.01).", "isRequired": false }
+      ]
+    }
+  ]
+}

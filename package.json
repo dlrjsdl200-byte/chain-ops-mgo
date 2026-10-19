@@ -1,13 +1,18 @@
 {
   "name": "chain-ops-mgo",
-  "version": "1.1.2",
-  "description": "Multi-chain Gas Optimizer — Compare real-time gas prices across 9 EVM chains via x402 pay-per-call on Base. Powered by @chain-ops/agent-sdk.",
+  "version": "1.2.0",
+  "description": "MGO (Multi-chain Gas Optimizer) client + stdio MCP server. Compare real-time gas across 9 EVM chains via x402 pay-per-call on Base.",
   "mcpName": "io.github.dlrjsdl200-byte/mgo-mcp-server",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "bin": {
+    "mgo-mcp": "bin/mgo-mcp.js",
+    "chain-ops-mgo": "bin/mgo-mcp.js"
+  },
   "type": "commonjs",
   "scripts": {
-    "test": "node src/index.js"
+    "test": "node test/smoke.js",
+    "test:live": "LIVE=1 node test/smoke.js"
   },
   "keywords": [
     "gas",
@@ -32,7 +37,8 @@
     "ethereum",
     "arbitrum",
     "optimism",
-    "chain-ops"
+    "chain-ops",
+    "mcp-server"
   ],
   "author": "leegun <dlrjsdl200@naver.com>",
   "license": "MIT",
@@ -43,6 +49,21 @@
   "homepage": "https://mgo.chain-ops.xyz",
   "bugs": {
     "url": "https://github.com/dlrjsdl200-byte/chain-ops-mgo/issues"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "SKILL.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0"
   },
   "peerDependencies": {
     "@chain-ops/agent-sdk": "^0.1.0",
