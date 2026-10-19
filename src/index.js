@@ -22,13 +22,36 @@ async function getGasDemo() {
  * @returns {Promise<object>}
  */
 async function getGasBasic(opts = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  return _fetchPaid(`${BASE_URL}/gas/basic`, opts);
+}
+
+// Decode the x402 v2 PAYMENT-REQUIRED header (base64 JSON); fall back to the v1 body.
+async function _paymentInfo(res) {
+  const h = res.headers.get('payment-required');
+  if (h) {
+    try { return JSON.parse(Buffer.from(h, 'base64').toString('utf8')); } catch {}
+  }
+  return res.json().catch(() => ({}));
+}
+
+async function _fetchPaid(url, opts = {}) {
+  const headers = { Accept: 'application/json' };
   if (opts.paymentHeader) Object.assign(headers, opts.paymentHeader);
-  const res = await fetch(`${BASE_URL}/gas/basic`, { headers });
+  const res = await fetch(url, { headers });
   if (res.status === 402) {
-    const paymentInfo = await res.json().catch(() => ({}));
+    const paymentInfo = await _paymentInfo(res);
     throw Object.assign(new Error('Payment required'), { status: 402, paymentInfo });
   }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Free native token USD prices (ETH, BNB, POL, AVAX, HYPE), cached 60s server-side.
+ * @returns {Promise<{success:boolean,currency:string,prices:Record<string,number>,fetchedAt:string,ageSec:number}>}
+ */
+async function getPrices() {
+  const res = await fetch(`${BASE_URL}/prices`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -45,41 +68,41 @@ async function getGasBasic(opts = {}) {
  * @returns {Promise<object>}
  */
 async function getGasPremium(opts = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (opts.paymentHeader) Object.assign(headers, opts.paymentHeader);
-  const res = await fetch(`${BASE_URL}/gas/premium`, { headers });
-  if (res.status === 402) {
-    const paymentInfo = await res.json().catch(() => ({}));
-    throw Object.assign(new Error('Payment required'), { status: 402, paymentInfo });
-  }
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return _fetchPaid(`${BASE_URL}/gas/premium`, opts);
 }
 
 /**
- * Get cheapest chain recommendation from demo data (no payment needed).
- * @returns {Promise<{chain: string, gasPriceGwei: string, dexSwapCostUsdc: number, savingsVs: string, savingsPercent: string}>}
+ * Cheapest chain for a DEX swap among the 4 free demo chains (no payment needed).
+ * The demo tier returns native-token costs only, so USD is derived from the free
+ * /prices endpoint; `dexSwapCostUsdc` is omitted if the price feed is unavailable.
+ * @returns {Promise<{chain: string, chainId: number, nativeToken: string, gasPriceGwei: string, dexSwapCostNative: string, dexSwapCostUsdc?: number, savingsVs: string, savingsPercent: string}>}
  */
 async function getCheapestChain() {
-  const data = await getGasDemo();
-  const chains = data.chains || [];
+  const [data, pricesRes] = await Promise.all([getGasDemo(), getPrices().catch(() => null)]);
+  const prices = (pricesRes && pricesRes.prices) || {};
+  const chains = (data.chains || []).filter((c) => c.status === 'ok' && c.estimatedCosts && c.estimatedCosts.dexSwap);
   if (!chains.length) throw new Error('No chain data');
-  const sorted = [...chains].sort((a, b) =>
-    parseFloat(a.gasPrice?.baseFeeGwei || 999) - parseFloat(b.gasPrice?.baseFeeGwei || 999)
-  );
+  // Compare by what a swap actually costs. All demo chains use ETH, so native cost
+  // is comparable even when USD prices are missing.
+  const costOf = (c) => {
+    const native = parseFloat(c.estimatedCosts.dexSwap.native);
+    const usd = prices[c.nativeToken];
+    return usd > 0 ? native * usd : native;
+  };
+  const sorted = [...chains].sort((a, b) => costOf(a) - costOf(b));
   const cheap = sorted[0];
   const expensive = sorted[sorted.length - 1];
-  const cCost = cheap.estimatedCosts?.dexSwap?.usdc;
-  const eCost = expensive.estimatedCosts?.dexSwap?.usdc;
-  const savings = cCost && eCost && parseFloat(eCost) > 0
-    ? `${((1 - cCost / eCost) * 100).toFixed(1)}%`
-    : 'N/A';
+  const cCost = costOf(cheap), eCost = costOf(expensive);
+  const usd = prices[cheap.nativeToken];
   return {
     chain: cheap.chain,
-    gasPriceGwei: cheap.gasPrice?.baseFeeGwei,
-    dexSwapCostUsdc: cCost,
+    chainId: cheap.chainId,
+    nativeToken: cheap.nativeToken,
+    gasPriceGwei: cheap.gasPrice && cheap.gasPrice.baseFeeGwei,
+    dexSwapCostNative: cheap.estimatedCosts.dexSwap.native,
+    ...(usd > 0 ? { dexSwapCostUsdc: Number((parseFloat(cheap.estimatedCosts.dexSwap.native) * usd).toFixed(6)) } : {}),
     savingsVs: expensive.chain,
-    savingsPercent: savings
+    savingsPercent: eCost > 0 ? `${((1 - cCost / eCost) * 100).toFixed(1)}%` : 'N/A'
   };
 }
 
@@ -94,13 +117,16 @@ function _loadAgentSdk() {
   }
 }
 
+// Default hard cap for auto-pay: 0.01 USDC (10x the premium price).
+const DEFAULT_MAX_PRICE = 10000n;
+
 async function _payAndFetch(url, { account, network = 'base', maxPrice } = {}) {
   if (!account) {
     throw new Error('account is required (private key 0x... or viem Account)');
   }
   const { createAgent } = _loadAgentSdk();
   const agent = createAgent({ account, network });
-  const result = await agent.pay(url, maxPrice ? { maxPrice } : undefined);
+  const result = await agent.pay(url, { maxPrice: maxPrice ?? DEFAULT_MAX_PRICE });
   return result.body;
 }
 
@@ -111,7 +137,7 @@ async function _payAndFetch(url, { account, network = 'base', maxPrice } = {}) {
  * @param {object} opts
  * @param {`0x${string}`|object} opts.account - Private key hex string or viem Account.
  * @param {'base'} [opts.network='base'] - x402 network (currently only 'base').
- * @param {bigint} [opts.maxPrice] - Hard cap in micro-USDC. Defaults to SDK default.
+ * @param {bigint} [opts.maxPrice] - Hard cap in micro-USDC. Default 10000n ($0.01).
  * @returns {Promise<object>} The parsed gas response body.
  */
 async function getGasBasicWithPayment(opts) {
@@ -125,7 +151,7 @@ async function getGasBasicWithPayment(opts) {
  * @param {object} opts
  * @param {`0x${string}`|object} opts.account - Private key hex string or viem Account.
  * @param {'base'} [opts.network='base'] - x402 network (currently only 'base').
- * @param {bigint} [opts.maxPrice] - Hard cap in micro-USDC.
+ * @param {bigint} [opts.maxPrice] - Hard cap in micro-USDC. Default 10000n ($0.01).
  * @returns {Promise<object>} The parsed gas response body.
  */
 async function getGasPremiumWithPayment(opts) {
@@ -134,10 +160,12 @@ async function getGasPremiumWithPayment(opts) {
 
 module.exports = {
   getGasDemo,
+  getPrices,
   getGasBasic,
   getGasPremium,
   getCheapestChain,
   getGasBasicWithPayment,
   getGasPremiumWithPayment,
+  DEFAULT_MAX_PRICE,
   BASE_URL
 };
