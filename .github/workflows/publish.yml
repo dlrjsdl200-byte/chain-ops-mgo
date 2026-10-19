@@ -1,0 +1,33 @@
+name: Publish to npm
+
+# Trusted publishing (OIDC). Configure once on npmjs.com -> chain-ops-mgo ->
+# Settings -> Trusted Publisher: owner dlrjsdl200-byte, repo chain-ops-mgo,
+# workflow publish.yml. Then push a tag (v1.2.0) or run manually.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install -g npm@latest
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - name: Refuse to publish if the tag and package.json disagree
+        if: github.ref_type == 'tag'
+        run: |
+          V=$(node -p "require('./package.json').version")
+          [ "refs/tags/v$V" = "$GITHUB_REF" ] || { echo "tag $GITHUB_REF != package.json $V"; exit 1; }
+      - run: npm publish --provenance --access public

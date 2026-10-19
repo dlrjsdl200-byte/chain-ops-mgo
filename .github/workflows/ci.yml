@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - name: Live API checks (demo, prices, 402 decode)
+        run: LIVE=1 npm test
+      - name: MCP binary answers initialize + tools/list over stdio
+        run: |
+          printf '%s\n%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | timeout 20 node bin/mgo-mcp.js > out.jsonl || true
+          grep -q '"serverInfo"' out.jsonl && grep -q 'get_gas_premium' out.jsonl && echo "stdio ok" || { cat out.jsonl; exit 1; }
