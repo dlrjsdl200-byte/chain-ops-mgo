@@ -9,18 +9,26 @@
   },
   "version": "1.2.0",
   "websiteUrl": "https://mgo.chain-ops.xyz",
-  "remotes": [
-    { "type": "streamable-http", "url": "https://api.mgo.chain-ops.xyz/mcp" }
-  ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "chain-ops-mgo",
       "version": "1.2.0",
-      "transport": { "type": "stdio" },
+      "transport": {
+        "type": "stdio"
+      },
       "environmentVariables": [
-        { "name": "MGO_PRIVATE_KEY", "description": "Optional. EVM private key (0x...) holding USDC on Base; enables auto-pay for the paid tools.", "isRequired": false, "isSecret": true },
-        { "name": "MGO_MAX_PRICE", "description": "Optional. Hard cap per call in micro-USDC (default 10000 = $0.01).", "isRequired": false }
+        {
+          "name": "MGO_PRIVATE_KEY",
+          "description": "Optional. EVM private key (0x...) holding USDC on Base; enables auto-pay for the paid tools.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "MGO_MAX_PRICE",
+          "description": "Optional. Hard cap per call in micro-USDC (default 10000 = $0.01).",
+          "isRequired": false
+        }
       ]
     }
   ]
